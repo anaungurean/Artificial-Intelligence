@@ -1,2 +1,4 @@
 # Artificial-Intelligence-AI-
-Artificial Intelligence
+Artificial Intelligence  homework repository for third-year university studies.
+
+
