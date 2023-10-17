@@ -120,6 +120,7 @@ def IDDFS(init_state, max_depth): #subpunctul4
         print(f"Depth: {depth}")
         sol = depth_limited_DFS(init_state, depth , visited)
         if sol is not None:
+            print(f"Depth: {depth}")
             return sol
     return None
 
@@ -162,16 +163,29 @@ puzzle.print_puzzle()
 print(f"Is this a final state : {puzzle.is_final()}")
 
 print()
+"""
+initial_state = [
+    [8, 6, 7],
+    [2, 5, 4],
+    [0, 3, 1]
+]
 
 initial_state = [
-    [1, 2, 0],
-    [4, 5, 3],
-    [7, 8, 6]
+    [2, 5, 3],
+    [1, 0, 6],
+    [4, 7, 8]
+]
+"""
+
+initial_state = [
+    [2, 7, 5],
+    [0, 8, 4],
+    [3, 1, 6]
 ]
 
 puzzle = initialize_puzzle(initial_state)
 
-solution = IDDFS(puzzle, 5)
+solution = IDDFS(puzzle, 50)
 
 if solution:
     print("Soluție găsită:")
