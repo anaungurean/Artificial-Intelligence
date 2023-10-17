@@ -5,27 +5,53 @@ class Puzzle:
         self.last_moved = None  # Poziția ultimei celule mutate
 
     def get_empty_position(self):
+        # Parcurgem fiecare rând din matrice utilizând enumerate pentru a obține indicele și conținutul rândului
         for i, row in enumerate(self.matrix):
             if 0 in row:
                 return i, row.index(0)
         return None
 
     def get_neighbors(self, x, y):
-        # direcțiile de mișcare: sus, jos, stânga, dreapta
+        # Definim direcțiile posibile de mișcare: sus, jos, stânga și dreapta
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        neighbors = [(x+dx, y+dy) for dx, dy in directions if 0 <= x+dx < 3 and 0 <= y+dy < 3]
+
+        neighbors = []
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < 3 and 0 <= ny < 3:
+                neighbors.append((nx, ny))
+
         return neighbors
 
     def print_puzzle(self):
         for row in self.matrix:
-            print(' '.join(['_' if x == 0 else str(x) for x in row]))
+            row_representation = []
+
+            for item in row:
+                if item == 0:
+                    row_representation.append('_')
+                else:
+                    row_representation.append(str(item))
+
+            #folosim join pentru a transforma lista de reprezentare a rândului într-un șir
+            row_string = ' '.join(row_representation)
+
+            print(row_string)
 
     def print_last_moved(self):
         print(self.last_moved)
 
-    def is_final(self): #subpunctul2
-        flat_matrix = [item for row in self.matrix for item in row if item != 0]  # ignorăm celula goală
-        return flat_matrix == [1, 2, 3, 4, 5, 6, 7, 8]
+    def is_final(self):
+        expected_values = list(range(1, 9))
+        flat_matrix = []
+
+        #aplatizam lista si trecem cu vederea peste 0
+        for row in self.matrix:
+            for item in row:
+                if item != 0:
+                    flat_matrix.append(item)
+
+        return flat_matrix == expected_values
 
     def can_move(self, x, y, direction): #subpunctul3
         if (x, y) == self.last_moved: #După mutarea unei celule, ea nu mai poate fi mutată din nou decât după ce unul din vecinii săi a fost mutat
