@@ -72,39 +72,53 @@ class Puzzle:
         self.last_moved = (x + dx, y + dy)
         return self
 
-    def get_valid_neighbors(self, x, y):
-        directions = ["up", "down", "left", "right"]
-        valid_moves = []
-        for direction in directions:
-            if self.can_move(x, y, direction):
-                new_puzzle = Puzzle([row.copy() for row in self.matrix])
-                new_puzzle.move(x, y, direction)
-                valid_moves.append(new_puzzle)
-        return valid_moves
 def initialize_puzzle(instance): #subpunctul2
     return Puzzle(instance)
 
 def is_final(state):
     return state.is_final()
 
-def depth_limited_DFS(state, depth, visited):
+def depth_limited_DFS(state, depth, visited): #subpunctul4
     if is_final(state):
         return state
     if depth == 0:
         return None
     visited.add(str(state.matrix))
     empty_x, empty_y = state.get_empty_position()
-    for neighbor in state.get_valid_neighbors(empty_x, empty_y):
-        if str(neighbor.matrix) not in visited:
-            res = depth_limited_DFS(neighbor, depth-1, visited)
-            if res is not None:
-                return res
+    neighbors_positions = state.get_neighbors(empty_x, empty_y)
+    for nx, ny in neighbors_positions:
+
+        if state.can_move(nx, ny, get_direction_from_positions(nx, ny, empty_x, empty_y)):
+            new_puzzle = copy.deepcopy(state)
+            new_puzzle.print_puzzle()
+            print(f"Mutam elementul de pozitia [{nx},{ny}] {get_direction_from_positions(nx, ny, empty_x, empty_y)}")
+            new_puzzle.move(nx, ny, get_direction_from_positions(nx, ny, empty_x, empty_y))
+            new_puzzle.print_puzzle()
+            print()
+
+            if str(new_puzzle.matrix) not in visited:
+                res = depth_limited_DFS(new_puzzle, depth-1, visited)
+                if res is not None:
+                    return res
     return None
 
-def IDDFS(init_state, max_depth):
+def get_direction_from_positions(ex, ey, nx, ny): #subpunctul4
+    # Această funcție determină direcția de mișcare dintre două poziții
+    if nx == ex - 1 and ny == ey:
+        return "up"
+    if nx == ex + 1 and ny == ey:
+        return "down"
+    if nx == ex and ny == ey - 1:
+        return "left"
+    if nx == ex and ny == ey + 1:
+        return "right"
+    return None
+
+def IDDFS(init_state, max_depth): #subpunctul4
     for depth in range(max_depth + 1):
         visited = set()
-        sol = depth_limited_DFS(init_state, depth, visited)
+        print(f"Depth: {depth}")
+        sol = depth_limited_DFS(init_state, depth , visited)
         if sol is not None:
             return sol
     return None
@@ -135,7 +149,7 @@ puzzle.move(0, 2, "down")
 puzzle.print_puzzle()
 
 
-instance1 = [[1, 2, 0], [3, 4, 5], [6, 7, 8]]
+instance1 = [[1, 2, 0], [5, 4, 5], [6, 7, 8]]
 puzzle = initialize_puzzle(instance1)
 print()
 puzzle.print_puzzle()
@@ -147,16 +161,25 @@ print()
 puzzle.print_puzzle()
 print(f"Is this a final state : {puzzle.is_final()}")
 
+print()
 
-"""
-initial_instance = [[8, 6, 0], [5, 4, 7], [2, 3, 1]]
-puzzle = initialize_puzzle(initial_instance)
+initial_state = [
+    [1, 2, 0],
+    [4, 5, 3],
+    [7, 8, 6]
+]
+
+puzzle = initialize_puzzle(initial_state)
+
 solution = IDDFS(puzzle, 5)
+
 if solution:
+    print("Soluție găsită:")
     solution.print_puzzle()
 else:
-    print("No solution found within the given depth.")
-"""
+    print("Nu s-a găsit nicio soluție în adâncimea specificată.")
+
+
 
 
 
