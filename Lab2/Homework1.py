@@ -1,18 +1,22 @@
 import copy
+import heapq
+import time
 class Puzzle:
     def __init__(self, matrix): #subpunctul1
         self.matrix = matrix
         self.last_moved = None  # Poziția ultimei celule mutate
+        self.heuristic_value = None
+
+    def __lt__(self, other):
+        return self.heuristic_value < other.heuristic_value
 
     def get_empty_position(self):
-        # Parcurgem fiecare rând din matrice utilizând enumerate pentru a obține indicele și conținutul rândului
         for i, row in enumerate(self.matrix):
             if 0 in row:
                 return i, row.index(0)
         return None
 
     def get_neighbors(self, x, y):
-        # Definim direcțiile posibile de mișcare: sus, jos, stânga și dreapta
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
         neighbors = []
@@ -33,7 +37,6 @@ class Puzzle:
                 else:
                     row_representation.append(str(item))
 
-            #folosim join pentru a transforma lista de reprezentare a rândului într-un șir
             row_string = ' '.join(row_representation)
 
             print(row_string)
@@ -45,7 +48,6 @@ class Puzzle:
         expected_values = list(range(1, 9))
         flat_matrix = []
 
-        #aplatizam lista si trecem cu vederea peste 0
         for row in self.matrix:
             for item in row:
                 if item != 0:
@@ -54,7 +56,7 @@ class Puzzle:
         return flat_matrix == expected_values
 
     def can_move(self, x, y, direction): #subpunctul3
-        if (x, y) == self.last_moved: #După mutarea unei celule, ea nu mai poate fi mutată din nou decât după ce unul din vecinii săi a fost mutat
+        if (x, y) == self.last_moved:
             return False
 
         dx, dy = 0, 0
@@ -151,6 +153,119 @@ def IDDFS(init_state, max_depth): #subpunctul4
     return None
 
 
+def greedy(init_state, heuristic_name): #subpunctul 5
+    def start_timer():
+        return time.time()
+
+    def stop_timer(start_time):
+        return time.time() - start_time
+
+    puzzle = initialize_puzzle(init_state)
+    puzzle.heuristic_value = average_heuristic_value(puzzle, heuristic_name)
+    pq = []
+    heapq.heappush(pq, (puzzle.heuristic_value, puzzle))
+    visited = [str(puzzle.matrix)]
+    move_count = 0
+
+    start_time = start_timer()
+
+    while pq:
+        avg, puzzle = heapq.heappop(pq)
+
+        if is_final(puzzle):
+            end_time = stop_timer(start_time)
+            print(f"Solutia gasita: {puzzle.matrix}")
+            print(f"Numărul total de mutări: {move_count}")
+            print(f"Durata execuției: {end_time} secunde")
+            return 1 # Ieșiți din bucla
+
+        empty_x, empty_y = puzzle.get_empty_position()
+        neighbors_positions = puzzle.get_neighbors(empty_x, empty_y)
+
+        for nx, ny in neighbors_positions:
+            if puzzle.can_move(nx, ny, get_direction_from_positions(nx, ny, empty_x, empty_y)):
+
+                new_puzzle = copy.deepcopy(puzzle)
+                # new_puzzle.print_puzzle()
+                # print(f"Mutam elementul de pozitia [{nx},{ny}] {get_direction_from_positions(nx, ny, empty_x, empty_y)}")
+                new_puzzle.move(nx, ny, get_direction_from_positions(nx, ny, empty_x, empty_y))
+                # new_puzzle.print_puzzle()
+                # print()
+
+                if str(new_puzzle.matrix) not in visited:
+                    new_puzzle.heuristic_value = average_heuristic_value(new_puzzle, heuristic_name)
+                    heapq.heappush(pq, (new_puzzle.heuristic_value, new_puzzle))
+                    visited.append(str(new_puzzle.matrix))
+                    move_count += 1
+
+    print("Nu am gasit")
+    return 0
+
+def get_manhattan_distance(p, q):
+
+    distance = 0
+    for p_i, q_i in zip(p, q):
+        distance += abs(p_i - q_i)
+
+    return distance
+
+def get_hamming_distance(p, q):
+
+    distance = 0
+    for p_i, q_i in zip(p, q):
+        if p_i != q_i:
+            distance += 1
+
+    return distance
+
+def get_chebyshev_distance(p, q):
+
+    distance = 0
+    for p_i, q_i in zip(p, q):
+        distance = max(distance, abs(p_i - q_i))
+
+    return distance
+
+
+
+
+def average_heuristic_value(puzzle, heuristic_name):
+    sume = 0
+    k = 0
+    empty_x, empty_y = puzzle.get_empty_position()
+    neighbors_positions = puzzle.get_neighbors(empty_x, empty_y)
+    for nx, ny in neighbors_positions:
+        if puzzle.can_move(nx, ny, get_direction_from_positions(nx, ny, empty_x, empty_y)):
+            k += 1
+            if heuristic_name == "manhattan":
+                sume += get_manhattan_distance((nx,ny),(empty_x,empty_y))
+            elif heuristic_name == "hamming":
+                sume += get_hamming_distance((nx,ny),(empty_x,empty_y))
+            elif heuristic_name == "chebyshev":
+                sume += get_chebyshev_distance((nx, ny), (empty_x, empty_y))
+            else:
+                return -1
+    return sume/k
+
+
+instance = [[2, 7, 5],
+    [0, 8, 4],
+    [3, 1, 6]]
+# instance = [
+#     [8, 6, 7],
+#     [2, 5, 4],
+#     [0, 3, 1]
+# ]
+
+greedy(instance,"manhattan")
+greedy(instance,"chebyshev")
+greedy(instance,"hamming")
+
+
+
+
+
+'''
 instance = [[8, 6, 0], [5, 4, 7], [2, 3, 1]]
 puzzle = initialize_puzzle(instance)
 puzzle.print_puzzle()
@@ -218,8 +333,7 @@ if solution:
     solution.print_puzzle()
 else:
     print("Nu s-a găsit nicio soluție în adâncimea specificată.")
-
-
+'''
 
 
 
