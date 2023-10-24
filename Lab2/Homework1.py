@@ -5,8 +5,7 @@ import queue
 class Puzzle:
     def __init__(self, matrix): #subpunctul1
         self.matrix = matrix
-        self.last_moved = None  # Poziția ultimei celule mutate
-        self.cost = 0
+        self.last_moved = None  
 
     def __lt__(self, other):
         return True
@@ -70,11 +69,9 @@ class Puzzle:
         elif direction == "right":
             dx, dy = 0, 1
 
-        # Verificăm dacă mișcarea este în interiorul grilei
         if not (0 <= x + dx < 3 and 0 <= y + dy < 3):
             return False
 
-        # Verificăm dacă celula în care se face mișcarea este goală
         if self.matrix[x + dx][y + dy] != 0:
             return False
 
@@ -94,10 +91,8 @@ class Puzzle:
         elif direction == "right":
             dx, dy = 0, 1
 
-        # Facem schimbul între celula selectată și celula goală
         self.matrix[x + dx][y + dy], self.matrix[x][y] = self.matrix[x][y], self.matrix[x + dx][y + dy]
 
-        # Actualizăm celula care a fost mișcată ultima dată
         self.last_moved = (x + dx, y + dy)
         return self
 
@@ -241,146 +236,62 @@ def average_heuristic_value(puzzle, heuristic_name):
                 return -1
     return sume/k
 
-def a_star(puzzle, heuristic_name):
-    puzzle.heuristic_value = heuristic_function(puzzle, heuristic_name)
-    initial_depth = 0
-
-    # Utilizați o coadă de priorități pentru stările neexplorate
-    pq = queue.PriorityQueue()
-    pq.put((puzzle.heuristic_value, initial_depth, puzzle))
-
-    # Folosiți un set pentru a ține evidența stărilor deja explorate
-    visited = set()
-    visited.add(str(puzzle.matrix))
-
-    # Folosim o listă pentru a ține evidența stărilor parcurse
-    path_states = [copy.deepcopy(puzzle)]
-
-    while not pq.empty():
-        _, depth, puzzle = pq.get()
-
-        if is_final(puzzle):
-            print("Soluție găsită:")
-            for state in path_states:
-                state.print_puzzle()
-                print()
-            print(f"Numărul total de mutări: {depth}")
-            return 1
-
-        empty_x, empty_y = puzzle.get_empty_position()
-        neighbors_positions = puzzle.get_neighbors(empty_x, empty_y)
-
-        for nx, ny in neighbors_positions:
-            if puzzle.can_move(nx, ny, get_direction_from_positions(nx, ny, empty_x, empty_y)):
-                new_puzzle = copy.deepcopy(puzzle)
-                new_puzzle.move(nx, ny, get_direction_from_positions(nx, ny, empty_x, empty_y))
-
-                if str(new_puzzle.matrix) not in visited:
-                    new_puzzle.cost += 1  # Actualizăm costul real
-                    new_puzzle.heuristic_value = heuristic_function(new_puzzle, heuristic_name)
-                    new_depth = depth + 1
-
-                    # Adăugăm starea nouă în coadă cu costul estimat total
-                    pq.put((new_puzzle.cost + new_puzzle.heuristic_value, new_depth, new_puzzle))
-                    visited.add(str(new_puzzle.matrix))
-
-                    # Actualizăm lista stărilor parcurse
-                    path_states.append(copy.deepcopy(new_puzzle))
-
-    print("Nicio soluție găsită.")
-    return 0
-def heuristic_function(puzzle, heuristic_name):
-    # Calculăm valoarea euristicii bazată pe euristica aleasă
-    if heuristic_name == "manhattan":
-        # Calculăm euristica Manhattan
-        return calculate_manhattan_heuristic(puzzle)
-    else:
-        return -1  # În cazul în care euristica nu este recunoscută
-
-def calculate_manhattan_heuristic(puzzle):
-    heuristic_value = 0
-    for i in range(len(puzzle.matrix)):
-        for j in range(len(puzzle.matrix[i])):
-            if puzzle.matrix[i][j] != 0:
-                current_value = puzzle.matrix[i][j]
-                goal_x, goal_y = (current_value - 1) // 3, (current_value - 1) % 3
-                heuristic_value += abs(i - goal_x) + abs(j - goal_y)
-    return heuristic_value
 
 
-initial_matrix = [[8, 6, 7], [2, 5, 4], [0, 3, 1]]
+def testare():
+    instance_1 = [[8, 6, 7], [2, 5, 4], [0, 3, 1]]
+    instance_2 = [[2, 5, 3], [1, 0, 6], [4, 7, 8]]
+    instance_3 =[[2, 7, 5], [0, 8, 4], [3, 1, 6]]
+    for i in range(1,4):
 
-initial_puzzle = Puzzle(initial_matrix)
-heuristic_name = "manhattan"  # Poate fi "manhattan" sau altă euristică admisibilă dorită
-a_star(initial_puzzle, heuristic_name)
+        print(f"____________Instanța{i}______________" )
+        if i == 1:
+            initial_state = instance_1
+        elif i == 2:
+            initial_state = instance_2
+        else:
+            initial_state = instance_3
+
+        puzzle = initialize_puzzle(initial_state)
+
+        print(f"Pentru instanta:{initial_state}")
+        print()
+
+
+        print("IDDFS:")
+        start_time = time.time()
+        IDDFS(puzzle,50)
+        end_time = time.time()
+        print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
+        print()
+
+        print("Greedy cu euristica Manhattan: ")
+        start_time = time.time()
+        greedy(puzzle,"manhattan")
+        end_time = time.time()
+        print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
+        print()
+
+
+        print("Greedy cu euristica Hamming: ")
+        start_time = time.time()
+        greedy(puzzle, "hamming")
+        end_time = time.time()
+        print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
+        print()
+
+
+        print("Greedy cu euristica Chebyshev: ")
+        start_time = time.time()
+        greedy(puzzle, "chebyshev")
+        end_time = time.time()
+        print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
+        print()
 
 
 
 
-
-
-
-
-
-
-
-
-
-# def testare():
-#     instance_1 = [[8, 6, 7], [2, 5, 4], [0, 3, 1]]
-#     instance_2 = [[2, 5, 3], [1, 0, 6], [4, 7, 8]]
-#     instance_3 =[[2, 7, 5], [0, 8, 4], [3, 1, 6]]
-#     for i in range(1,4):
-#
-#         print(f"____________Instanța{i}______________" )
-#         if i == 1:
-#             initial_state = instance_1
-#         elif i == 2:
-#             initial_state = instance_2
-#         else:
-#             initial_state = instance_3
-#
-#         puzzle = initialize_puzzle(initial_state)
-#
-#         print(f"Pentru instanta:{initial_state}")
-#         print()
-#
-#         print(A(puzzle))
-#
-#         # print("IDDFS:")
-#         # start_time = time.time()
-#         # IDDFS(puzzle,50)
-#         # end_time = time.time()
-#         # print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
-#         # print()
-#         #
-#         # print("Greedy cu euristica Manhattan: ")
-#         # start_time = time.time()
-#         # greedy(puzzle,"manhattan")
-#         # end_time = time.time()
-#         # print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
-#         # print()
-#         #
-#         #
-#         # print("Greedy cu euristica Hamming: ")
-#         # start_time = time.time()
-#         # greedy(puzzle, "hamming")
-#         # end_time = time.time()
-#         # print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
-#         # print()
-#         #
-#         #
-#         # print("Greedy cu euristica Chebyshev: ")
-#         # start_time = time.time()
-#         # greedy(puzzle, "chebyshev")
-#         # end_time = time.time()
-#         # print(f"Timpul de execuție: {round(end_time - start_time,2)} secunde")
-#         # print()
-
-
-
-
-# testare()
+testare()
 
 
 
