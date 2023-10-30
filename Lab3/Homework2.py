@@ -1,15 +1,29 @@
+import queue
+import time
 class CSP:
 
     def __init__(self, variables, domains, constraints):
         self.variables = variables
         self.domains = domains
         self.constraints = constraints
-        self.solution = None
+        self.solution_fc = None
+        self.solution_ac = None
 
-    def find_solution(self):
+    def find_solution_fc(self):
         assignment = {}
-        self.solution = self.backtrack_with_fc(assignment, self.domains)
-        return self.solution
+        start_time = time.time()
+        self.solution_fc = self.backtrack_with_fc(assignment, self.domains)
+        end_time = time.time()
+        print(f"Timpul pentru metoda Forward Checking: {end_time - start_time} sec")
+        return self.solution_fc
+
+    def find_solution_ac(self):
+        assignment = {}
+        start_time = time.time()
+        self.solution_ac = self.backtrack_with_ac(assignment, self.domains)
+        end_time = time.time()
+        print(f"Timpul pentru metoda Arc Consistency: {end_time - start_time} sec")
+        return self.solution_ac
 
     def backtrack_with_fc(self, assignment, domains):
         if self.is_complete(assignment):
@@ -60,6 +74,40 @@ class CSP:
     def is_complete(self, assignment): #fiecare variabila are asignata o valoare, adica am terminat cautarea
         return len(assignment) == len(self.variables)
 
+    def arc_consistency(self, domains):
+        q = queue.Queue()
+        for X in self.variables:
+            for Y in self.constraints[X]:
+                q.put((X, Y))
+
+        while not q.empty():
+            (X, Y) = q.get()
+            ok = True
+            for x in domains[X].copy():
+                if not any(y for y in domains[Y] if self.is_consistent({}, Y, y)):
+                    ok = False
+                    domains[X].remove(x)
+
+            if not ok:
+                for Z in self.constraints[X]:
+                    q.put((Z, X))
+        return domains
+
+    def backtrack_with_ac(self, assignment, domains):
+        if self.is_complete(assignment):
+            return assignment
+
+        var = self.next_unassigned_variables(assignment, domains)
+        reduced_domains = self.arc_consistency(domains.copy())
+        for value in reduced_domains[var].copy():
+            if self.is_consistent(assignment, var, value):
+                new_assignment = assignment.copy()
+                new_assignment[var] = value
+                if not any(len(reduced_domains[v]) == 0 for v in reduced_domains):
+                    res = self.backtrack_with_ac(new_assignment, reduced_domains)
+                    if res is not None:
+                        return res
+        return None
 
 def find_start_region(x):
     if x in (0,1,2):
@@ -140,8 +188,10 @@ for i in range(0, 9):
 print(f"Constrangerile pentru fiecare pozitie: {constraints}")
 print()
 
-csp = CSP(variables, domains, constraints)
-sol = csp.find_solution()
+csp_fc = CSP(variables, domains, constraints)
+csp_ac = CSP(variables, domains, constraints)
+sol_fc = csp_fc.find_solution_fc()#solutia pentru FC
+sol_ac = csp_ac.find_solution_ac()#solutia pentru AC
 
 
 def print_sudoku(table):
@@ -159,12 +209,23 @@ print("Tabla de sudoku inițială:")
 print_sudoku(sudoku_init)
 print()
 
-if sol is not None:
+if sol_fc is not None:
      print("Tabla de sudoku finală:")
      # print(sol) avem doar asignarile trebuie sa le punem in forma de matrice
      solution = [[0 for i in range(9)] for j in range(9)]
-     for (i, j) in sol:
-         solution[i][j] = sol[(i, j)]
+     for (i, j) in sol_fc:
+         solution[i][j] = sol_fc[(i, j)]
+     print_sudoku(solution)
+else:
+    print("No solution found")
+
+
+if sol_ac is not None:
+     print("\nTabla de sudoku finală:")
+     # print(sol) avem doar asignarile trebuie sa le punem in forma de matrice
+     solution = [[0 for i in range(9)] for j in range(9)]
+     for (i, j) in sol_ac:
+         solution[i][j] = sol_ac[(i, j)]
      print_sudoku(solution)
 else:
     print("No solution found")
