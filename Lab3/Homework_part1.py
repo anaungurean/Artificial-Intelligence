@@ -30,7 +30,7 @@ class CSP:
             return assignment
 
         var = self.next_unassigned_variables(assignment, domains)
-        for value in domains[var].copy():
+        for value in domains[var].copy(): #sa nu modificam direct domains in timpul iteratiei
             if self.is_consistent(assignment, var, value):
                 new_assignment = assignment.copy()
                 new_assignment[var] = value
@@ -61,7 +61,7 @@ class CSP:
 
         return new_domains
 
-    def is_consistent(self, assignment, var, value):
+    def is_consistent(self, assignment, var, value): #respecta toate constrangerile
         for constraint_var in self.constraints[var]:
             if constraint_var in assignment and assignment[constraint_var] == value:
                 return False
@@ -77,11 +77,12 @@ class CSP:
         def number_of_possible_values(variable):
             return len(domains[variable])
 
+        # variabila neasignată cu cel mai mic număr de valori posibile în domeniul său.
         variable_with_minimum_possible_values = min(unassigned_vars, key=number_of_possible_values)
 
         return variable_with_minimum_possible_values
 
-    def is_complete(self, assignment):
+    def is_complete(self, assignment): #fiecare variabila are asignata o valoare, adica am terminat cautarea
         return len(assignment) == len(self.variables)
 
     def arc_consistency(self, domains):
@@ -119,7 +120,6 @@ class CSP:
                         return res
         return None
 
-
 def find_start_region(x):
     if x in (0,1,2):
         return 0
@@ -129,17 +129,6 @@ def find_start_region(x):
         return 6
 
 
-# sudoku_init = [
-#     [0, -1, -1, 5, 0, -1, 0, -1, 0],
-#     [7, -1, 0, -1, 0, 0, -1, 3, 8],
-#     [9, -1, 3, 7, 4, -1, 5, 0, -1],
-#     [0, 0, 0, -1, 7, 4, 0, 2, -1],
-#     [-1, 8, 0, 0, 6, 2, 0, 7, 0],
-#     [-1, 0, 2, 0, 0, 0, -1, -1, 1],
-#     [8, 0, -1, 4, -1, 0, 0, 0, 0],
-#     [0, 1, 0, 0, -1, 9, -1, -1, 4],
-#     [-1, 0, 4, 6, 1, 0, -1, 5, 0]
-# ]
 
 sudoku_init = [
     [8, 4, 0, 0, 5, 0, -1, 0, 0],
@@ -153,22 +142,23 @@ sudoku_init = [
     [0, 0, 0, 0, 2, 0, 0, 1, 3]
 ]
 
+
 variables = []
 for i in range(0,9):
     for j in range(0,9):
-        variables.append((i,j))
+        variables.append((i,j)) #toate pozitiile din sudoku
 
 print(f"Mulțimea de variabile:{variables}")
 
-domains = {}
+domains = {} #dictionar cu cheie: (i,j) si valoarea : domeniul de valori pe care-l poate lua
 for i in range(0,9):
     for j in range(0,9):
-        if sudoku_init[i][j] == -1:
+        if sudoku_init[i][j] == -1: #trebuie nr par
             domains[(i, j)] = {2, 4, 6, 8}
         elif sudoku_init[i][j] == 0:
             domains[(i, j)] = {1, 2, 3, 4, 5, 6, 7, 8, 9}
         else:
-            domains[(i, j)] = {sudoku_init[i][j]}
+            domains[(i, j)] = {sudoku_init[i][j]} #are deja valoare
 
 print(f"Domenii pentru fiecare valoare:{domains}")
 
@@ -183,16 +173,16 @@ def find_start_region(x):
 
 
 def add_constraint(var):
-    constraints[var] = set()
-    for j in range(0,9):
-        if j != var[1]:
+    constraints[var] = set() #evităm duplicatele
+    for j in range(0,9): #constrângere pe linie
+        if j != var[1]: #să nu fie aceeași poziție
             constraints[var].add((var[0], j))
 
     for i in range(0,9):
         if i != var[0]:
             constraints[var].add((i,var[1]))
 
-    start_region_i = find_start_region(var[0])
+    start_region_i = find_start_region(var[0]) #constrângeri pt regiuni
     start_region_j = find_start_region(var[1])
     for i in range(start_region_i, start_region_i+3):
         for j in range(start_region_j, start_region_j+3):
@@ -201,18 +191,18 @@ def add_constraint(var):
 
 
 
-constraints = {}
+constraints = {} #dictionar cu cheie: (i,j) si valoarea : lista de constangeri, pozitile cu care nu poate fi egal
 for i in range(0, 9):
     for j in range(0, 9):
-        add_constraint((i, j))
+        add_constraint((i, j)) #20 de fiecare ar trebui
 
 print(f"Constrangerile pentru fiecare pozitie: {constraints}")
 print()
 
 csp_fc = CSP(variables, domains, constraints)
 csp_ac = CSP(variables, domains, constraints)
-sol_fc = csp_fc.find_solution_fc()
-sol_ac = csp_ac.find_solution_ac()
+sol_fc = csp_fc.find_solution_fc()#solutia pentru FC
+sol_ac = csp_ac.find_solution_ac()#solutia pentru AC
 
 
 def print_sudoku(table):
@@ -232,6 +222,7 @@ print()
 
 if sol_fc is not None:
      print("Tabla de sudoku finală:")
+     # print(sol) avem doar asignarile trebuie sa le punem in forma de matrice
      solution = [[0 for i in range(9)] for j in range(9)]
      for (i, j) in sol_fc:
          solution[i][j] = sol_fc[(i, j)]
@@ -242,6 +233,7 @@ else:
 
 if sol_ac is not None:
      print("\nTabla de sudoku finală:")
+     # print(sol) avem doar asignarile trebuie sa le punem in forma de matrice
      solution = [[0 for i in range(9)] for j in range(9)]
      for (i, j) in sol_ac:
          solution[i][j] = sol_ac[(i, j)]
