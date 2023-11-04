@@ -109,17 +109,17 @@ class CSP:
             return assignment
 
         var = self.next_unassigned_variables(assignment, domains)
-        reduced_domains = self.arc_consistency(domains.copy())
-        for value in reduced_domains[var].copy():
+
+        for value in domains[var].copy():
             if self.is_consistent(assignment, var, value):
                 new_assignment = assignment.copy()
                 new_assignment[var] = value
+                reduced_domains = self.arc_consistency(domains.copy())
                 if not any(len(reduced_domains[v]) == 0 for v in reduced_domains):
                     res = self.backtrack_with_ac(new_assignment, reduced_domains)
                     if res is not None:
                         return res
         return None
-
 def find_start_region(x):
     if x in (0,1,2):
         return 0
