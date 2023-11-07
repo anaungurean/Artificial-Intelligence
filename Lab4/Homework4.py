@@ -11,12 +11,12 @@ class NumberScramble:
             [2,5,8], [6,5,4]
         ]
 
-    def display_state_representation(self): #state representation
-        print("\nNumere disponibile: " + ' '.join(map(str, self.available_numbers)))
-        print("Mutări Player: " + ' '.join(map(str, self.player_moves['Player'])))
-        print("Mutări AI: " + ' '.join(map(str, self.player_moves['AI'])))
+    def display_state_representation(self):
+        print("\nAvailable numbers: " + ' '.join(map(str, self.available_numbers)))
+        print("Player's moves: " + ' '.join(map(str, self.player_moves['Player'])))
+        print("AI moves: " + ' '.join(map(str, self.player_moves['AI'])))
 
-    def is_winner(self,player):
+    def is_winner(self, player):
         moves = self.player_moves
         for triplet in self.triplets_sum_15:
             if all(value in moves[player] for value in triplet):
@@ -26,7 +26,7 @@ class NumberScramble:
     def is_draw(self):
         return len(self.available_numbers) == 0
 
-    def is_game_over(self): #final states
+    def is_game_over(self):
         return self.is_winner('Player') or self.is_winner('AI') or self.is_draw()
 
     def get_winner(self):
@@ -36,10 +36,10 @@ class NumberScramble:
             return 'Player'
         return 'AI'
 
-    def validate_move(self, number): #validations
+    def validate_move(self, number):
         return number in self.available_numbers
 
-    def make_move(self, number, player): #transitions
+    def make_move(self, number, player):
         if self.validate_move(number):
             self.player_moves[player].append(number)
             self.available_numbers.remove(number)
@@ -51,20 +51,16 @@ class NumberScramble:
         self.current_player = 'AI' if self.current_player == 'Player' else 'Player'
 
     def heuristic(self):
-        '''
-        Pentru AI, o direcție deschisă este un triplet unde niciunul dintre numere nu a fost ales de jucătorul uman,
-        Pentru jucătorul uman este un triplet unde niciunul dintre numere nu a fost ales de AI.
-        '''
-        ai_score = 0 #nr de directii deschise pentru AI
-        player_score = 0 #nr de directii deschise pentru player
+        ai_score = 0
+        player_score = 0
         for triplet in self.triplets_sum_15:
-            if all(num in self.available_numbers or num in self.player_moves['AI'] for num in triplet): #verificam daca toate numerele din triplet fie nu au fost deja alese fie au fost alese de jucatorul resp.
+            if all(num in self.available_numbers or num in self.player_moves['AI'] for num in triplet):
                 ai_score += 1
             if all(num in self.available_numbers or num in self.player_moves['Player'] for num in triplet):
                 player_score += 1
-        return ai_score - player_score # >0 -> avantaj AI (are mai multe directii deschise) <0 -> avantaj Player = 0 ambii jucători au același număr de oportunități de a câștiga.
+        return ai_score - player_score
 
-    def minmax(self, depth, is_max_player): #scorul estimat al starii curente a jocului
+    def minmax(self, depth, is_max_player):
 
         if self.is_game_over():
             if self.is_winner('AI'):
@@ -104,9 +100,9 @@ class NumberScramble:
         best_move = None
         for number in self.available_numbers:
             self.make_move(number, 'AI')
-            score = self.minmax(2,False) # false deoarece urmatoare mutare este a adevarsarului
+            score = self.minmax(2,False)
             self.undo_move(number,'AI')
-            if score > best_score:
+            if score >= best_score:
                 best_score = score
                 best_move = number
         return best_move
