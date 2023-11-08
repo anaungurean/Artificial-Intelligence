@@ -1,7 +1,7 @@
 import numpy as np
 
 class NumberScramble:
-    def __init__(self): #initial state
+    def __init__(self):
         self.available_numbers = list(range(1,10))
         self.player_moves = {'Player': [], 'AI': []}
         self.current_player = 'Player'
@@ -43,7 +43,7 @@ class NumberScramble:
         if self.validate_move(number):
             self.player_moves[player].append(number)
             self.available_numbers.remove(number)
-            self.current_player = 'AI' if player == 'Player' else 'Player'
+            self.switch_player()
             return True
         return False
 
@@ -58,10 +58,12 @@ class NumberScramble:
                 ai_score += 1
             if all(num in self.available_numbers or num in self.player_moves['Player'] for num in triplet):
                 player_score += 1
-        return ai_score - player_score
+        if self.current_player == 'AI':
+            return ai_score - player_score
+        else:
+            return player_score-ai_score
 
     def minmax(self, depth, is_max_player):
-
         if self.is_game_over():
             if self.is_winner('AI'):
                 return 10
@@ -100,7 +102,7 @@ class NumberScramble:
         best_move = None
         for number in self.available_numbers:
             self.make_move(number, 'AI')
-            score = self.minmax(2,False)
+            score = self.minmax(6,False)
             self.undo_move(number,'AI')
             if score >= best_score:
                 best_score = score
