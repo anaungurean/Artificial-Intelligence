@@ -23,6 +23,13 @@ class NeuralNetwork:
         self.weights_hidden_3_output = None
         self.assign_weights()
 
+        #Bias-uri
+        self.bias_hidden_1 = None
+        self.bias_hidden_2 = None
+        self.bias_hidden_3 = None
+        self.bias_output = None
+        self.assign_biases()
+
     def assign_weights(self):
         ok = True
         while ok:
@@ -33,6 +40,16 @@ class NeuralNetwork:
             if not (self.weights_hidden_1_hidden_2.any() == 0 or self.weights_hidden_2_hidden_3.any() == 0 or self.weights_hidden_3_output.any() == 0):
                 ok = False
 
+    def assign_biases(self):
+        ok = True
+        while ok:
+            self.bias_hidden_1 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_1_size))
+            self.bias_hidden_2 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_2_size))
+            self.bias_hidden_3 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_3_size))
+            self.bias_output = np.random.uniform(-0.1, 0.1, (1, self.output_layer_size))
+            if not (np.any(self.bias_hidden_1) == 0 or np.any(self.bias_hidden_2) == 0 or
+                    np.any(self.bias_hidden_3) == 0 or np.any(self.bias_output) == 0):
+                ok = False
 
     def load_data(self, file_path):
         data = np.loadtxt(file_path, delimiter='\t')
@@ -71,23 +88,22 @@ class NeuralNetwork:
         print(f'Testing data is: \n{self.test_data}')
 
     def feedforward(self, input_data):
-        hidden_layer_1_input = np.dot(input_data, self.weights_input_hidden_1)
+        hidden_layer_1_input = np.dot(input_data, self.weights_input_hidden_1) + self.bias_hidden_1
         hidden_layer_1_output = self.sigmoid(hidden_layer_1_input)
 
-        hidden_layer_2_input = np.dot(hidden_layer_1_output, self.weights_hidden_1_hidden_2)
+        hidden_layer_2_input = np.dot(hidden_layer_1_output, self.weights_hidden_1_hidden_2) + self.bias_hidden_2
         hidden_layer_2_output = self.relu(hidden_layer_2_input)
 
-        hidden_layer_3_input = np.dot(hidden_layer_2_output, self.weights_hidden_2_hidden_3)
+        hidden_layer_3_input = np.dot(hidden_layer_2_output, self.weights_hidden_2_hidden_3) + self.bias_hidden_3
         hidden_layer_3_output = self.bipolar_sigmoid(hidden_layer_3_input)
 
-        output_layer_input = np.dot(hidden_layer_3_output, self.weights_hidden_3_output)
+        output_layer_input = np.dot(hidden_layer_3_output, self.weights_hidden_3_output) + self.bias_output
         output_layer_output = self.sigmoid(output_layer_input)
 
         return output_layer_output, hidden_layer_3_output, hidden_layer_2_output, hidden_layer_1_output
 
     def backpropagation(self, input_data, target):
-        output_layer_output, hidden_layer_3_output, hidden_layer_2_output, hidden_layer_1_output = self.feedforward(
-            input_data)
+        output_layer_output, hidden_layer_3_output, hidden_layer_2_output, hidden_layer_1_output = self.feedforward(input_data)
 
         output_layer_error = target - output_layer_output
         output_layer_delta = output_layer_error * self.sigmoid_derivative(output_layer_output)
@@ -101,7 +117,7 @@ class NeuralNetwork:
         hidden_layer_1_error = np.dot(hidden_layer_2_delta, self.weights_hidden_1_hidden_2.T)
         hidden_layer_1_delta = hidden_layer_1_error * self.sigmoid_derivative(hidden_layer_1_output)
 
-        # Asigurați-vă că dimensiunile sunt corecte pentru înmulțire
+        #actualizam ponderile
         self.weights_hidden_3_output += self.learning_rate * np.dot(hidden_layer_3_output.T.reshape(-1, 1),
                                                                     output_layer_delta.reshape(1, -1))
         self.weights_hidden_2_hidden_3 += self.learning_rate * np.dot(hidden_layer_2_output.T.reshape(-1, 1),
@@ -111,6 +127,11 @@ class NeuralNetwork:
         self.weights_input_hidden_1 += self.learning_rate * np.dot(input_data.reshape(-1, 1),
                                                                    hidden_layer_1_delta.reshape(1, -1))
 
+        #actualizam bias-urile
+        self.bias_output += self.learning_rate * output_layer_delta
+        self.bias_hidden_3 += self.learning_rate * hidden_layer_3_delta
+        self.bias_hidden_2 += self.learning_rate * hidden_layer_2_delta
+        self.bias_hidden_1 += self.learning_rate * hidden_layer_1_delta
         return output_layer_error
 
     def train(self):
