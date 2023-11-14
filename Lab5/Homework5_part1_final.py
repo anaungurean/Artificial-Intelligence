@@ -5,7 +5,6 @@ def load_data(file_path):
     data = np.loadtxt(file_path, delimiter='\t')
     return data
 def split_data(data):
-    unique_labels = np.unique(data[:, -1])
     ok = False
     train_data = None
     test_data = None
@@ -114,7 +113,7 @@ class NeuralNetwork:
         output_layer_input = np.dot(hidden_layer_2_output, self.weights_hidden_2_output) + self.bias_output
         output_layer_output = self.bipolar_sigmoid(output_layer_input)
 
-        return output_layer_output
+        return output_layer_output, hidden_layer_1_output, hidden_layer_2_output
 
 
 
@@ -130,7 +129,7 @@ test_instance = test_data[test_instance_index, :-1]
 expected_output = test_data[test_instance_index, -1]
 
 print(f"\nInitial value of the test instance: {test_instance}")
-output = nm.feedforward(test_instance)
+output = nm.feedforward(test_instance)[0]
 
 predicted_label = np.argmax(output) + 1
 

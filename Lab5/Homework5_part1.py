@@ -2,7 +2,6 @@ import numpy as np
 
 
 def split_data(data):
-    unique_labels = np.unique(data[:, -1])
     ok = False
     train_data = None
     test_data = None
@@ -34,7 +33,6 @@ class NeuralNetwork:
         # dimenstiunea straturilor ascunse
         self.hidden_layer_1_size = 5
         self.hidden_layer_2_size = 4
-        self.hidden_layer_3_size = 3
         # dimenstiunea stratului de iesire care e egal cu nr de etichete unice
         self.output_layer_size = len(np.unique(self.train_data[:, -1]))
 
@@ -47,8 +45,7 @@ class NeuralNetwork:
         #influențează cât de mult contribuie intrarea unui neuron la activarea celui următor
         self.weights_input_hidden_1 = None #o lista de weights pt fiecere conexiune dintre stratul de intare si primul strat ascuns
         self.weights_hidden_1_hidden_2 = None
-        self.weights_hidden_2_hidden_3 = None
-        self.weights_hidden_3_output = None
+        self.weights_hidden_2_output = None
         self.assign_weights()
 
         #Bias-uri parametru adițional - val constanta
@@ -57,7 +54,6 @@ class NeuralNetwork:
         #Se adăuga la suma ponderată a intrărilor înainte de a fi transmisă funcției de activare
         self.bias_hidden_1 = None
         self.bias_hidden_2 = None
-        self.bias_hidden_3 = None
         self.bias_output = None
         self.assign_biases()
 
@@ -71,11 +67,10 @@ class NeuralNetwork:
                                                             (self.input_layer_size, self.hidden_layer_1_size))
             self.weights_hidden_1_hidden_2 = np.random.uniform(-0.1, 0.1,
                                                                (self.hidden_layer_1_size, self.hidden_layer_2_size))
-            self.weights_hidden_2_hidden_3 = np.random.uniform(-0.1, 0.1,
-                                                               (self.hidden_layer_2_size, self.hidden_layer_3_size))
-            self.weights_hidden_3_output = np.random.uniform(-0.1, 0.1,
-                                                             (self.hidden_layer_3_size, self.output_layer_size))
-            if not(self.weights_hidden_1_hidden_2.any() == 0 or self.weights_hidden_2_hidden_3.any() == 0 or self.weights_hidden_3_output.any() == 0):
+            self.weights_hidden_2_output = np.random.uniform(-0.1, 0.1,
+                                                             (self.hidden_layer_2_size, self.output_layer_size))
+            if not (
+                    self.weights_input_hidden_1.any() == 0 or self.weights_hidden_1_hidden_2.any() == 0 or self.weights_hidden_2_output.any() == 0):
                 ok = True
 
     def assign_biases(self):
@@ -83,10 +78,8 @@ class NeuralNetwork:
         while not ok:
             self.bias_hidden_1 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_1_size))
             self.bias_hidden_2 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_2_size))
-            self.bias_hidden_3 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_3_size))
             self.bias_output = np.random.uniform(-0.1, 0.1, (1, self.output_layer_size))
-            if not (np.any(self.bias_hidden_1) == 0 or np.any(self.bias_hidden_2) == 0 or
-                    np.any(self.bias_hidden_3) == 0 or np.any(self.bias_output) == 0):
+            if not (np.any(self.bias_hidden_1) == 0 or np.any(self.bias_hidden_2) == 0  or np.any(self.bias_output) == 0):
                 ok = True
 
     def print_parameters(self):
@@ -94,19 +87,16 @@ class NeuralNetwork:
         print(f"Input Layer Size: {self.input_layer_size}")
         print(f"Hidden Layer 1 Size: {self.hidden_layer_1_size}")
         print(f"Hidden Layer 2 Size: {self.hidden_layer_2_size}")
-        print(f"Hidden Layer 3 Size: {self.hidden_layer_3_size}")
         print(f"Output Layer Size: {self.output_layer_size}")
         print(f"Learning Rate: {self.learning_rate}")
         print(f"Maximum Epochs: {self.max_epochs}")
         print("\n==== Weights ====")
         print(f"Input-Hidden 1 Weights:\n{self.weights_input_hidden_1}")
         print(f"Hidden 1-Hidden 2 Weights:\n{self.weights_hidden_1_hidden_2}")
-        print(f"Hidden 2-Hidden 3 Weights:\n{self.weights_hidden_2_hidden_3}")
-        print(f"Hidden 3-Output Weights:\n{self.weights_hidden_3_output}")
+        print(f"Hidden 2-Hidden 3 Weights:\n{self.weights_hidden_2_output}")
         print("\n==== Biases ====")
         print(f"Hidden 1 Bias:\n{self.bias_hidden_1}")
         print(f"Hidden 2 Bias:\n{self.bias_hidden_2}")
-        print(f"Hidden 3 Bias:\n{self.bias_hidden_3}")
         print(f"Output Bias:\n{self.bias_output}")
 
 
@@ -143,27 +133,67 @@ class NeuralNetwork:
         return 0.5 * np.mean((target - output) ** 2)
 
     def feedforward(self, input_data):
-        #np dot efectuează o înmulțire matriceală între intrările (sau ieșirile) de la un strat și ponderile care conectează acel strat la următorul
         hidden_layer_1_input = np.dot(input_data, self.weights_input_hidden_1) + self.bias_hidden_1
         hidden_layer_1_output = self.sigmoid(hidden_layer_1_input)
 
         hidden_layer_2_input = np.dot(hidden_layer_1_output, self.weights_hidden_1_hidden_2) + self.bias_hidden_2
         hidden_layer_2_output = self.relu(hidden_layer_2_input)
 
-        hidden_layer_3_input = np.dot(hidden_layer_2_output, self.weights_hidden_2_hidden_3) + self.bias_hidden_3
-        hidden_layer_3_output = self.bipolar_sigmoid(hidden_layer_3_input)
+        output_layer_input = np.dot(hidden_layer_2_output, self.weights_hidden_2_output) + self.bias_output
+        output_layer_output = self.bipolar_sigmoid(output_layer_input)
 
-        output_layer_input = np.dot(hidden_layer_3_output, self.weights_hidden_3_output) + self.bias_output
-        output_layer_output = self.sigmoid(output_layer_input)
+        return output_layer_output, hidden_layer_2_output, hidden_layer_1_output
 
-        return output_layer_output
+    def backpropagation(self, input_data, target):
+        output_layer_output, hidden_layer_2_output, hidden_layer_1_output = self.feedforward(input_data)
+
+        output_layer_error = target - output_layer_output
+        output_layer_delta = output_layer_error * self.bipolar_sigmoid_derivative(output_layer_output)
+
+        hidden_layer_2_error = np.dot(output_layer_delta, self.weights_hidden_2_output.T)
+        hidden_layer_2_delta = hidden_layer_2_error * self.relu_derivative(hidden_layer_2_output)
+
+        hidden_layer_1_error = np.dot(hidden_layer_2_delta, self.weights_hidden_1_hidden_2.T)
+        hidden_layer_1_delta = hidden_layer_1_error * self.sigmoid_derivative(hidden_layer_1_output)
+
+        #actualizam ponderile
+        self.weights_hidden_2_output += self.learning_rate * np.dot(hidden_layer_2_output.T.reshape(-1, 1),
+                                                                    output_layer_delta.reshape(1, -1))
+        self.weights_hidden_1_hidden_2 += self.learning_rate * np.dot(hidden_layer_1_output.T.reshape(-1, 1),
+                                                                      hidden_layer_2_delta.reshape(1, -1))
+        self.weights_input_hidden_1 += self.learning_rate * np.dot(input_data.T.reshape(-1, 1),
+                                                                   hidden_layer_1_delta.reshape(1, -1))
+
+        #actualizam bias-urile
+        self.bias_output += self.learning_rate * output_layer_delta
+        self.bias_hidden_2 += self.learning_rate * hidden_layer_2_delta
+        self.bias_hidden_1 += self.learning_rate * hidden_layer_1_delta
 
 
 
 
-#Pregatim datele pentru clasificatorul nostru
 data = load_data('seets_dataset.txt')
-train_data, test_data = split_data(data) #subpunctul 1
+train_data, test_data = split_data(data)  
 nm = NeuralNetwork(train_data, test_data)
 nm.print_parameters()
+
+
+test_instance_index = 0
+test_instance = test_data[test_instance_index, :-1]
+expected_output = test_data[test_instance_index, -1]
+
+print(f"\nInitial value of the test instance: {test_instance}")
+output = nm.feedforward(test_instance)[0]
+
+predicted_label = np.argmax(output) + 1
+
+print(f"Probabilities associated with feedforward: {output}")
+print(f"Predicted label: {predicted_label}")
+print(f"Expected label: {expected_output}")
+
+if predicted_label == expected_output:
+    print("Prediction is correct!")
+else:
+    print("Prediction is incorrect.")
+
 
