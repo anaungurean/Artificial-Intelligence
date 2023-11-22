@@ -79,7 +79,7 @@ class NeuralNetwork:
             self.bias_hidden_1 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_1_size))
             self.bias_hidden_2 = np.random.uniform(-0.1, 0.1, (1, self.hidden_layer_2_size))
             self.bias_output = np.random.uniform(-0.1, 0.1, (1, self.output_layer_size))
-            if not (np.any(self.bias_hidden_1) == 0 or np.any(self.bias_hidden_2) == 0  or np.any(self.bias_output) == 0):
+            if not (np.any(self.bias_hidden_1) == 0 or np.any(self.bias_hidden_2) == 0 or np.any(self.bias_output) == 0):
                 ok = True
 
     def print_parameters(self):
@@ -172,7 +172,7 @@ class NeuralNetwork:
 
 
 
-data = load_data('seets_dataset.txt')
+data = load_data('../Lab5/seets_dataset.txt')
 train_data, test_data = split_data(data)  
 nm = NeuralNetwork(train_data, test_data)
 nm.print_parameters()

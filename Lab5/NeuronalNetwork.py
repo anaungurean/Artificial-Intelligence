@@ -1,23 +1,4 @@
 import numpy as np
-def load_data(file_path):
-    data = np.loadtxt(file_path, delimiter='\t')
-    return data
-
-
-def split_data(data):
-    ok = False
-    train_data = None
-    test_data = None
-    while not ok:
-        np.random.shuffle(data)
-        split_index = int(0.8 * len(data))
-        train_data = data[:split_index]
-        test_data = data[split_index:]
-        train_labels = np.unique(train_data[:, -1])
-        if all(label in train_labels for label in train_labels):
-            ok = True
-    return train_data, test_data
-
 
 class NeuralNetwork:
 
@@ -30,7 +11,7 @@ class NeuralNetwork:
         self.hidden_layer_2_size = 4
         self.output_layer_size = len(np.unique(self.train_data[:, -1]))
 
-        self.learning_rate = 0.3
+        self.learning_rate = 0.1
         self.max_epochs = 500
 
         self.weights_input_hidden_1 = None
@@ -113,6 +94,19 @@ class NeuralNetwork:
 
     def error_function(self, target, output):
         return 0.5 * np.mean((target - output) ** 2)
+
+    def test(self):
+        correct_predictions = 0
+        total_instances = len(self.test_data)
+
+        for input_data in self.test_data:
+            true_label = int(input_data[-1])
+            predicted_label = self.predict(input_data[:-1])
+            if predicted_label == true_label:
+                correct_predictions += 1
+
+        accuracy_percentage = 100 - (correct_predictions / total_instances) * 100
+        print(f"Accuracy: {total_instances - correct_predictions} / {total_instances} ({accuracy_percentage:.2f}%)")
 
     def feedforward(self, input_data):
         hidden_layer_1_input = np.dot(input_data, self.weights_input_hidden_1) + self.bias_hidden_1
@@ -210,11 +204,5 @@ class NeuralNetwork:
         return prediction
 
 
-data = load_data('seets_dataset.txt')
-train_data, test_data = split_data(data)
-nm = NeuralNetwork(train_data, test_data)
-# nm.print_parameters()
 
-nm.train()
-nm.run_test()
 
