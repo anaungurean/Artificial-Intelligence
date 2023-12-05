@@ -15,7 +15,7 @@ class QLearningAgent:
         self.q_table = np.zeros((self.num_rows, self.num_cols, 4))
 
     def take_action(self, state, action):
-        action_deltas = [(1, 0), (-1,0), (0,-1), (0,1)]  # jos, sus, stanga, dreapta
+        action_deltas = [(1, 0), (-1, 0), (0, -1), (0, 1)]  # jos, sus, stanga, dreapta
         delta = action_deltas[action]
 
         wind_effect = self.wind[state[1]] if 0 <= state[1] < len(self.wind) else 0
@@ -26,15 +26,27 @@ class QLearningAgent:
 
         return next_state
 
+    def is_valid_action(self, state, action):
+        if state[0] == 0 and action == 1:
+            return False
+        elif state[0] == self.num_rows - 1 and action == 0:
+            return False
+        elif state[1] == 0 and action == 2:
+            return False
+        elif state[1] == self.num_cols - 1 and action == 3:
+            return False
+        return True
+
     def q_learning(self, epsilon=0.1):
+        episode_rewards = []
 
         for episode in range(self.num_episodes):
             current_state = self.initial_state
-
+            total_reward = 0
             while current_state != self.goal_state:
 
                 if random.uniform(0, 1) < epsilon:
-                    action = random.choice([0, 1, 2, 3])
+                    action = random.choice([a for a in [0, 1, 2, 3] if self.is_valid_action(current_state, a)])
                 else:
                     action = np.argmax(self.q_table[current_state])
 
@@ -48,8 +60,15 @@ class QLearningAgent:
                         reward + self.discount_factor * self.q_table[next_state][best_next_action]
                         - self.q_table[current_state][action])
 
+                total_reward += reward
                 current_state = next_state
+            episode_rewards.append(total_reward)
 
+        plt.plot(range(1, self.num_episodes + 1), episode_rewards)
+        plt.xlabel('Episode')
+        plt.ylabel('Total Reward')
+        plt.title('Q-learning Convergence')
+        plt.show()
 
         current_state = self.initial_state
 
@@ -70,12 +89,12 @@ class QLearningAgent:
         for row in range(self.num_rows):
             for col in range(self.num_cols):
                 state = (row, col)
-                action = np.argmax(self.q_table[state])
                 if state == self.goal_state:
                     print(" G ", end="")
                 elif state == self.initial_state:
                     print(" I ", end="")
                 else:
+                    action = np.argmax(self.q_table[state])
                     if action == 0:
                         print(" ↓ ", end="")
                     elif action == 1:
@@ -84,7 +103,18 @@ class QLearningAgent:
                         print(" ← ", end="")
                     elif action == 3:
                         print(" → ", end="")
+
             print()
+    def plot_optimal_path(self, optimal_path):
+        grid = np.zeros((self.num_rows, self.num_cols))
+        for state in optimal_path:
+            grid[state] = 1
+
+        plt.imshow(grid, cmap='Blues', interpolation='nearest', origin='upper')
+        plt.title('Optimal Path')
+        plt.xlabel('Column')
+        plt.ylabel('Row')
+        plt.show()
 
     def display_q_values(self):
         for row in range(self.num_rows):
@@ -109,6 +139,8 @@ if __name__ == '__main__':
     actions = [0, 1, 2, 3]  # 0: jos, 1: sus, 2: stanga, 3: dreapta
     agent.q_learning()
     agent.display_policy()
+    optimal_path = agent.get_optimal_path()
+    agent.plot_optimal_path(optimal_path)
 
 
 
