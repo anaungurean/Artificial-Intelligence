@@ -108,6 +108,17 @@ class QLearningAgent:
                 q_values = self.q_table[state]
                 print(f"State: {state}, Q-values: {q_values}")
 
+    def plot_optimal_path(self, optimal_path):
+        grid = np.zeros((self.num_rows, self.num_cols))
+        for state in optimal_path:
+            grid[state] = 1
+
+        plt.imshow(grid, cmap='Blues', interpolation='nearest', origin='upper')
+        plt.title('Optimal Path')
+        plt.xlabel('Column')
+        plt.ylabel('Row')
+        plt.show()
+
 
 if __name__ == '__main__':
 
@@ -139,4 +150,6 @@ if __name__ == '__main__':
 
     agent.display_policy()
     # agent.display_q_values()
+
+    agent.plot_optimal_path(optimal_path)
 
