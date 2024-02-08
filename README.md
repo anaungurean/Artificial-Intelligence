@@ -1,4 +1,3 @@
 # Artificial-Intelligence-AI-
-Artificial Intelligence  homework repository for third-year university studies.
-
+This repository showcases a collection of assignments completed during the third-year Artificial Intelligence course at university. 
 
